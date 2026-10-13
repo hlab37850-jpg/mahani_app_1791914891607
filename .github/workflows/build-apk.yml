@@ -53,10 +53,12 @@ jobs:
               path = kotlin
               enabled_line = "        isCoreLibraryDesugaringEnabled = true"
               dependency_line = '    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")'
+              dependency_block = "dependencies {\n" + dependency_line + "\n}"
           elif groovy.exists():
               path = groovy
               enabled_line = "        coreLibraryDesugaringEnabled true"
               dependency_line = "    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'"
+              dependency_block = "dependencies {\n" + dependency_line + "\n}"
           else:
               raise SystemExit("ERROR: Android app Gradle file not found")
 
@@ -67,9 +69,10 @@ jobs:
               text = text.replace("compileOptions {", "compileOptions {\n" + enabled_line, 1)
 
           if "desugar_jdk_libs" not in text:
-              if "dependencies {" not in text:
-                  raise SystemExit("ERROR: dependencies block not found")
-              text = text.replace("dependencies {", "dependencies {\n" + dependency_line, 1)
+              if "dependencies {" in text:
+                  text = text.replace("dependencies {", "dependencies {\n" + dependency_line, 1)
+              else:
+                  text = text.rstrip() + "\n\n" + dependency_block + "\n"
 
           path.write_text(text)
           print(f"Core library desugaring enabled in {path}")
