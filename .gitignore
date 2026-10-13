@@ -1,0 +1,11 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+build/
+.gradle/
+.idea/
+*.iml
+.env
+.mahani-checkpoint.json
+github-build/
