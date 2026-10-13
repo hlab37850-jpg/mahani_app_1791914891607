@@ -67,7 +67,7 @@ class Category {
   Map<String, dynamic> toMap() => {
         'id': id,
         'name': name,
-        'color': color.value,
+        'color': color.toARGB32,
         'isIncome': isIncome ? 1 : 0,
       };
 }
