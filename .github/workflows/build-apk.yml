@@ -40,6 +40,41 @@ jobs:
           rm -rf /tmp/flutter_template
           echo "Android platform created"
 
+      - name: Enable core library desugaring
+        run: |
+          set -e
+          python3 - <<'PY'
+          from pathlib import Path
+
+          kotlin = Path("android/app/build.gradle.kts")
+          groovy = Path("android/app/build.gradle")
+
+          if kotlin.exists():
+              path = kotlin
+              enabled_line = "        isCoreLibraryDesugaringEnabled = true"
+              dependency_line = '    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")'
+          elif groovy.exists():
+              path = groovy
+              enabled_line = "        coreLibraryDesugaringEnabled true"
+              dependency_line = "    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'"
+          else:
+              raise SystemExit("ERROR: Android app Gradle file not found")
+
+          text = path.read_text()
+          if "isCoreLibraryDesugaringEnabled" not in text and "coreLibraryDesugaringEnabled" not in text:
+              if "compileOptions {" not in text:
+                  raise SystemExit("ERROR: compileOptions block not found")
+              text = text.replace("compileOptions {", "compileOptions {\n" + enabled_line, 1)
+
+          if "desugar_jdk_libs" not in text:
+              if "dependencies {" not in text:
+                  raise SystemExit("ERROR: dependencies block not found")
+              text = text.replace("dependencies {", "dependencies {\n" + dependency_line, 1)
+
+          path.write_text(text)
+          print(f"Core library desugaring enabled in {path}")
+          PY
+
       - name: Verify environment
         run: |
           set -e
@@ -60,15 +95,12 @@ jobs:
         shell: bash
         run: |
           set -e
-
           APK="build/app/outputs/flutter-apk/app-release.apk"
-
           if [ ! -f "$APK" ]; then
             echo "ERROR: APK was not created"
             find build -type f -name "*.apk" -print || true
             exit 1
           fi
-
           echo "APK CREATED SUCCESSFULLY"
           ls -lh "$APK"
 
